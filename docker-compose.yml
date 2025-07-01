@@ -5,11 +5,13 @@ services:
     build: 
       context: ./services/printers-service
       dockerfile: Dockerfile
+    container_name: printers-service
     ports:
       - "8000:8000"
     environment:
       - APP_ENV=development
       - LOG_LEVEL=info
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/printing_db
     volumes:
       - ./services/printers-service:/app
     depends_on:
@@ -21,15 +23,20 @@ services:
     build: 
       context: ./services/monitoring-service
       dockerfile: Dockerfile
+    container_name: monitoring-service
     ports:
-      - "8001:8000"
+      - "8002:8000"
     environment:
       - APP_ENV=development
       - LOG_LEVEL=info
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/printing_db
+      - PRINTERS_SERVICE_URL=http://printers-service:8000
+      - CALIBRATION_SERVICE_URL=http://calibration-service:8000
     volumes:
       - ./services/monitoring-service:/app
     depends_on:
-      - postgres
+      - printers-service
+      - calibration-service
     networks:
       - printing-network
 
@@ -37,20 +44,24 @@ services:
     build: 
       context: ./services/calibration-service
       dockerfile: Dockerfile
+    container_name: calibration-service
     ports:
-      - "8002:8000"
+      - "8001:8000"
     environment:
       - APP_ENV=development
       - LOG_LEVEL=info
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/printing_db
+      - PRINTERS_SERVICE_URL=http://printers-service:8000
     volumes:
       - ./services/calibration-service:/app
     depends_on:
-      - postgres
+      - printers-service
     networks:
       - printing-network
 
   postgres:
     image: postgres:13-alpine
+    container_name: postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -59,6 +70,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - printing-network
 
