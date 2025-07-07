@@ -13,8 +13,74 @@ from typing import Optional
 
 app = FastAPI(
     title="Monitoring Service",
-    description="Microservice for monitoring printer status and metrics",
-    version="0.1.0"
+    description="""
+    ## Microservicio de Monitoreo de Impresoras 3D
+    
+    Este servicio maneja el monitoreo en tiempo real de las impresoras 3D y sus trabajos de impresión:
+    
+    ### Funcionalidades Principales:
+    - **Gestión de Trabajos de Impresión**: Crear, monitorear y controlar trabajos de impresión
+    - **Monitoreo de Estado**: Seguimiento en tiempo real del estado de las impresoras
+    - **Sistema de Alertas**: Generación y gestión de alertas del sistema
+    - **Métricas de Rendimiento**: Recopilación y consulta de métricas de impresión
+    - **Control de Trabajos**: Pausar, reanudar y cancelar trabajos de impresión
+    
+    ### Integración:
+    - Se integra con el **Printers Service** para obtener información de impresoras
+    - Se integra con el **Calibration Service** para gestionar alertas de calibración
+    - Proporciona endpoints para el dashboard de monitoreo
+    
+    ### Endpoints Disponibles:
+    - `GET /health` - Verificación de salud del servicio
+    - `GET /monitoring/status` - Estado general del sistema
+    - `POST /monitoring/alerts` - Crear alertas
+    - `GET /monitoring/alerts` - Listar alertas
+    - `POST /monitoring/metrics` - Registrar métricas
+    - `GET /monitoring/metrics` - Consultar métricas
+    - `POST /print-jobs` - Crear trabajos de impresión
+    - `GET /print-jobs/{job_id}` - Obtener trabajo de impresión
+    - `PUT /print-jobs/{job_id}` - Actualizar trabajo de impresión
+    - `POST /print-jobs/{job_id}/start` - Iniciar trabajo
+    - `POST /print-jobs/{job_id}/pause` - Pausar trabajo
+    - `POST /print-jobs/{job_id}/resume` - Reanudar trabajo
+    - `POST /print-jobs/{job_id}/cancel` - Cancelar trabajo
+    - `GET /printers/{printer_id}/status` - Estado de impresora específica
+    """,
+    version="1.0.0",
+    contact={
+        "name": "PrintDM Team",
+        "email": "support@printdm.com",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    tags=[
+        {
+            "name": "health",
+            "description": "Endpoints para verificación de salud del servicio"
+        },
+        {
+            "name": "monitoring",
+            "description": "Monitoreo general del sistema y métricas"
+        },
+        {
+            "name": "alerts",
+            "description": "Gestión de alertas del sistema"
+        },
+        {
+            "name": "metrics",
+            "description": "Recopilación y consulta de métricas"
+        },
+        {
+            "name": "print-jobs",
+            "description": "Gestión completa de trabajos de impresión"
+        },
+        {
+            "name": "printer-status",
+            "description": "Monitoreo del estado de impresoras específicas"
+        }
+    ]
 )
 
 # CORS middleware configuration

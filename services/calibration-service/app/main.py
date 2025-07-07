@@ -12,8 +12,62 @@ import os
 
 app = FastAPI(
     title="Calibration Service",
-    description="Microservice for managing printer calibration processes",
-    version="0.1.0"
+    description="""
+    ## Microservicio de Calibración de Impresoras 3D
+    
+    Este servicio maneja todos los procesos de calibración de las impresoras 3D:
+    
+    ### Funcionalidades Principales:
+    - **Gestión de Calibración**: Iniciar, monitorear y completar procesos de calibración
+    - **Perfiles de Calibración**: Crear y gestionar perfiles de calibración personalizados
+    - **Alertas Automáticas**: Sistema de alertas automáticas después de cierto número de impresiones
+    - **Historial de Calibración**: Seguimiento del historial de calibraciones por impresora
+    - **Contadores de Impresión**: Control del número de impresiones antes de requerir calibración
+    
+    ### Integración:
+    - Se integra con el **Printers Service** para obtener información de impresoras
+    - Se integra con el **Monitoring Service** para enviar alertas de calibración
+    - Proporciona endpoints para el dashboard de calibración
+    
+    ### Endpoints Disponibles:
+    - `GET /health` - Verificación de salud del servicio
+    - `POST /calibration/start` - Iniciar proceso de calibración
+    - `GET /calibration/{calibration_id}` - Obtener estado de calibración
+    - `GET /calibration/printer/{printer_id}` - Historial de calibraciones por impresora
+    - `POST /calibration/profiles` - Crear perfil de calibración
+    - `GET /calibration/profiles/{profile_id}` - Obtener perfil de calibración
+    - `GET /calibration/profiles` - Listar perfiles de calibración
+    - `POST /printers/{printer_id}/print-completed` - Notificar impresión completada
+    - `GET /printers/{printer_id}/calibration-status` - Estado de calibración de impresora
+    - `POST /printers/{printer_id}/calibrate` - Realizar calibración manual
+    """,
+    version="1.0.0",
+    contact={
+        "name": "PrintDM Team",
+        "email": "support@printdm.com",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    tags=[
+        {
+            "name": "health",
+            "description": "Endpoints para verificación de salud del servicio"
+        },
+        {
+            "name": "calibration",
+            "description": "Gestión de procesos de calibración"
+        },
+        {
+            "name": "profiles",
+            "description": "Gestión de perfiles de calibración"
+        },
+        {
+            "name": "printers",
+            "description": "Operaciones de calibración por impresora"
+        }
+    ]
 )
 
 # CORS middleware configuration

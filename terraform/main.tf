@@ -67,6 +67,7 @@ resource "docker_image" "printers_service" {
   name = "printing-domain/printers-service:latest"
   build {
     context = "../services/printers-service"
+    dockerfile = "Dockerfile"
   }
 }
 
@@ -90,6 +91,16 @@ resource "docker_container" "printers_service" {
   }
   
   depends_on = [docker_container.postgres]
+  
+  healthcheck {
+    test     = ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    interval = "10s"
+    timeout  = "5s"
+    retries  = 3
+    start_period = "30s"
+  }
+  
+  restart = "unless-stopped"
 }
 
 # Monitoring Service
@@ -97,6 +108,7 @@ resource "docker_image" "monitoring_service" {
   name = "printing-domain/monitoring-service:latest"
   build {
     context = "../services/monitoring-service"
+    dockerfile = "Dockerfile"
   }
 }
 
@@ -107,6 +119,8 @@ resource "docker_container" "monitoring_service" {
   env = [
     "APP_ENV=production",
     "DATABASE_URL=postgresql://postgres:postgres@postgres:5432/printing_db",
+    "PRINTERS_SERVICE_URL=http://printers-service:8000",
+    "CALIBRATION_SERVICE_URL=http://calibration-service:8000",
     "LOG_LEVEL=info"
   ]
   
@@ -115,11 +129,21 @@ resource "docker_container" "monitoring_service" {
   }
   
   ports {
-    internal = 8001
-    external = 8001
+    internal = 8000
+    external = 8002
   }
   
-  depends_on = [docker_container.postgres]
+  depends_on = [docker_container.printers_service, docker_container.calibration_service]
+  
+  healthcheck {
+    test     = ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    interval = "10s"
+    timeout  = "5s"
+    retries  = 3
+    start_period = "30s"
+  }
+  
+  restart = "unless-stopped"
 }
 
 # Calibration Service
@@ -127,6 +151,7 @@ resource "docker_image" "calibration_service" {
   name = "printing-domain/calibration-service:latest"
   build {
     context = "../services/calibration-service"
+    dockerfile = "Dockerfile"
   }
 }
 
@@ -137,6 +162,7 @@ resource "docker_container" "calibration_service" {
   env = [
     "APP_ENV=production",
     "DATABASE_URL=postgresql://postgres:postgres@postgres:5432/printing_db",
+    "PRINTERS_SERVICE_URL=http://printers-service:8000",
     "LOG_LEVEL=info"
   ]
   
@@ -145,11 +171,21 @@ resource "docker_container" "calibration_service" {
   }
   
   ports {
-    internal = 8002
-    external = 8002
+    internal = 8000
+    external = 8001
   }
   
-  depends_on = [docker_container.postgres]
+  depends_on = [docker_container.printers_service]
+  
+  healthcheck {
+    test     = ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    interval = "10s"
+    timeout  = "5s"
+    retries  = 3
+    start_period = "30s"
+  }
+  
+  restart = "unless-stopped"
 }
 
 # Outputs

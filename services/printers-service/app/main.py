@@ -9,8 +9,58 @@ from enum import Enum
 
 app = FastAPI(
     title="Printers Service",
-    description="Microservice for managing printers and their operations",
-    version="0.1.0"
+    description="""
+    ## Microservicio de Gestión de Impresoras 3D
+    
+    Este servicio maneja toda la información relacionada con las impresoras 3D del sistema:
+    
+    ### Funcionalidades Principales:
+    - **Gestión de Impresoras**: Crear, listar, obtener y actualizar información de impresoras
+    - **Control de Volumen**: Seguimiento del volumen de impresión acumulado
+    - **Especificaciones Técnicas**: Almacenamiento de especificaciones de cada impresora
+    - **Calibración**: Gestión del estado de calibración y contadores de impresión
+    - **Monitoreo de Estado**: Control del estado actual de cada impresora
+    
+    ### Integración:
+    - Se integra con el **Monitoring Service** para reportar cambios de estado
+    - Se integra con el **Calibration Service** para gestionar alertas de calibración
+    
+    ### Endpoints Disponibles:
+    - `GET /health` - Verificación de salud del servicio
+    - `GET /printers` - Listar todas las impresoras
+    - `POST /printers` - Crear una nueva impresora
+    - `GET /printers/{printer_id}` - Obtener información de una impresora específica
+    - `PUT /printers/{printer_id}/volume` - Actualizar volumen de impresión
+    - `POST /printers/{printer_id}/calibrate` - Realizar calibración
+    - `GET /printers/{printer_id}/info` - Obtener información detallada de la impresora
+    """,
+    version="1.0.0",
+    contact={
+        "name": "PrintDM Team",
+        "email": "support@printdm.com",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    tags=[
+        {
+            "name": "health",
+            "description": "Endpoints para verificación de salud del servicio"
+        },
+        {
+            "name": "printers",
+            "description": "Operaciones CRUD para gestión de impresoras 3D"
+        },
+        {
+            "name": "volume",
+            "description": "Gestión del volumen de impresión acumulado"
+        },
+        {
+            "name": "calibration",
+            "description": "Operaciones relacionadas con la calibración de impresoras"
+        }
+    ]
 )
 
 # CORS middleware configuration
@@ -82,16 +132,83 @@ class Printer(PrinterBase):
         orm_mode = True
 
 # Routes
-@app.get("/health")
+@app.get("/health", tags=["health"], summary="Verificar salud del servicio")
 async def health_check():
-    return {"status": "ok"}
+    """
+    Verifica que el servicio esté funcionando correctamente.
+    
+    Returns:
+        dict: Estado del servicio con timestamp
+    """
+    return {
+        "status": "ok",
+        "service": "printers-service",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0"
+    }
 
-@app.get("/printers", response_model=List[Printer])
+@app.get("/printers", response_model=List[Printer], tags=["printers"], summary="Listar todas las impresoras")
 async def list_printers():
+    """
+    Obtiene una lista de todas las impresoras registradas en el sistema.
+    
+    Returns:
+        List[Printer]: Lista de todas las impresoras con su información completa
+        
+    Example:
+        ```json
+        [
+            {
+                "id": "1",
+                "name": "Impresora Principal",
+                "model": "Ender 3 Pro",
+                "ip_address": "192.168.1.100",
+                "location": "Laboratorio A",
+                "status": "idle",
+                "specs": {
+                    "max_volume_mm": {"x": 220, "y": 220, "z": 250},
+                    "supported_materials": ["PLA", "ABS", "PETG"],
+                    "layer_resolution_mm": 0.2,
+                    "has_heated_bed": true
+                }
+            }
+        ]
+        ```
+    """
     return list(printers_db.values())
 
-@app.post("/printers", response_model=Printer, status_code=status.HTTP_201_CREATED)
+@app.post("/printers", response_model=Printer, status_code=status.HTTP_201_CREATED, tags=["printers"], summary="Crear una nueva impresora")
 async def create_printer(printer: PrinterCreate):
+    """
+    Crea una nueva impresora en el sistema.
+    
+    Args:
+        printer (PrinterCreate): Datos de la impresora a crear
+        
+    Returns:
+        Printer: Impresora creada con ID asignado
+        
+    Raises:
+        HTTPException: Si los datos de la impresora son inválidos
+        
+    Example:
+        ```json
+        {
+            "name": "Impresora Nueva",
+            "model": "Prusa i3 MK3S",
+            "ip_address": "192.168.1.101",
+            "location": "Laboratorio B",
+            "status": "offline",
+            "print_volume_tolerance": 150.0,
+            "specs": {
+                "max_volume_mm": {"x": 250, "y": 210, "z": 200},
+                "supported_materials": ["PLA", "ABS", "PETG", "TPU"],
+                "layer_resolution_mm": 0.15,
+                "has_heated_bed": true
+            }
+        }
+        ```
+    """
     printer_id = str(len(printers_db) + 1)
     now = datetime.utcnow()
     db_printer = Printer(

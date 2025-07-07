@@ -98,3 +98,33 @@ destroy-tf:
 integration-test:
 	@echo "${GREEN}Running integration tests...${RESET}"
 	python scripts/test_services.py
+
+## Run comprehensive test suite
+test-comprehensive:
+	@echo "${GREEN}Running comprehensive test suite...${RESET}"
+	python scripts/comprehensive_test_suite.py
+
+## Deploy and test with Docker Compose
+deploy-test-docker:
+	@echo "${GREEN}Deploying with Docker Compose and running tests...${RESET}"
+	bash scripts/deploy_and_test.sh -m docker-compose
+
+## Deploy and test with Terraform
+deploy-test-terraform:
+	@echo "${GREEN}Deploying with Terraform and running tests...${RESET}"
+	bash scripts/deploy_and_test.sh -m terraform
+
+## Deploy and test with both methods
+deploy-test-both:
+	@echo "${GREEN}Deploying with both methods and running tests...${RESET}"
+	bash scripts/deploy_and_test.sh -m both
+
+## Run tests only (no deployment)
+test-only:
+	@echo "${GREEN}Running tests only...${RESET}"
+	bash scripts/deploy_and_test.sh -t
+
+## Clean and deploy
+clean-deploy:
+	@echo "${GREEN}Cleaning and deploying...${RESET}"
+	bash scripts/deploy_and_test.sh -c -m docker-compose

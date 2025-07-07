@@ -45,14 +45,39 @@ This project uses a centralized dependency management system:
    pip install -r requirements-dev.txt
    ```
 
-### Running Tests
+### Testing
 
-To run tests for all services:
+### Pruebas Automatizadas
+
+El sistema incluye un plan de pruebas de funcionamiento completo:
 
 ```bash
-# From the project root
-./scripts/run_tests.sh
+# Ejecutar pruebas básicas
+python scripts/test_services.py
+
+# Ejecutar suite comprehensiva de pruebas
+make test-comprehensive
+
+# Desplegar y ejecutar todas las pruebas
+make deploy-test-docker
 ```
+
+### Tipos de Pruebas
+
+- ✅ **Pruebas Unitarias**: Endpoints individuales y validación
+- ✅ **Pruebas de Integración**: Comunicación entre servicios
+- ✅ **Pruebas de Rendimiento**: Carga y métricas
+- ✅ **Pruebas de Robustez**: Manejo de errores y recuperación
+
+### Reportes de Pruebas
+
+Los scripts generan reportes detallados con:
+- Estado de cada prueba
+- Métricas de rendimiento
+- Logs de errores
+- Recomendaciones de mejora
+
+Para más detalles, consulta [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md) y [EVALUACION_MICROSERVICIOS.md](EVALUACION_MICROSERVICIOS.md).
 
 ## Services Overview
 
@@ -89,6 +114,8 @@ To run tests for all services:
 
 ## Getting Started
 
+### Opción 1: Despliegue Rápido con Docker Compose
+
 1. Clone the repository
 2. Start the services:
    ```bash
@@ -99,8 +126,95 @@ To run tests for all services:
    - **Printers Service:** [http://localhost:8000](http://localhost:8000)
    - **Monitoring Service:** [http://localhost:8002](http://localhost:8002)
    - **Calibration Service:** [http://localhost:8001](http://localhost:8001)
-   - **PostgreSQL:** `localhost:5432`
+   - **PostgreSQL:** `localhost:5433` (configurado para evitar conflictos)
    - **pgAdmin:** [http://localhost:5050](http://localhost:5050) (admin@example.com/admin)
+
+### Solución de Conflictos de Puertos
+
+Si encuentras errores de puertos ocupados:
+
+1. **Verificar puertos en uso:**
+   ```bash
+   # Windows
+   netstat -ano | findstr :5432
+   
+   # Linux/Mac
+   lsof -i :5432
+   ```
+
+2. **Cambiar puerto de PostgreSQL en docker-compose.yml:**
+   ```yaml
+   postgres:
+     ports:
+       - "5434:5432"  # Cambiar 5434 por cualquier puerto libre
+   ```
+
+3. **Actualizar variables de entorno si es necesario:**
+   ```yaml
+   environment:
+     - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/printing_db
+   ```
+   *Nota: El puerto interno (5432) no cambia, solo el externo.*
+
+### Opción 2: Despliegue Automatizado con Pruebas
+
+```bash
+# Desplegar con Docker Compose y ejecutar pruebas
+make deploy-test-docker
+
+# Desplegar con Terraform y ejecutar pruebas
+make deploy-test-terraform
+
+# Solo ejecutar pruebas (sin desplegar)
+make test-only
+
+# Limpiar y desplegar
+make clean-deploy
+```
+
+### Opción 3: Despliegue Manual con Terraform (Local)
+
+```bash
+# Inicializar Terraform
+cd terraform && terraform init
+
+# Aplicar configuración
+terraform apply -auto-approve
+
+# Verificar estado
+terraform show
+```
+
+### Opción 4: Despliegue en AWS con ALB e IPs Elásticas
+
+```bash
+# Configurar AWS CLI
+aws configure
+
+# Crear repositorio ECR
+aws ecr create-repository --repository-name printdm
+
+# Configurar variables
+cd terraform/aws
+cp terraform.tfvars.example terraform.tfvars
+# Editar terraform.tfvars con tus valores
+
+# Desplegar en AWS
+terraform init
+terraform plan
+terraform apply
+```
+
+**Características de AWS:**
+- ✅ **Application Load Balancer (ALB)** para distribución de tráfico
+- ✅ **3 IPs Elásticas** asignadas (una por servicio)
+- ✅ **ECS Fargate** para ejecución sin servidor
+- ✅ **RDS PostgreSQL** gestionado
+- ✅ **CloudWatch** para logs y monitoreo
+- ✅ **Security Groups** configurados
+- ✅ **VPC** personalizada con subnets públicas/privadas
+
+Para más detalles, consulta [terraform/aws/README.md](terraform/aws/README.md).
 
 ## Key Features
 
@@ -126,11 +240,20 @@ To run tests for all services:
 
 ## API Documentation
 
-Each service provides interactive OpenAPI documentation:
+Each service provides interactive OpenAPI documentation with comprehensive Swagger documentation:
 
 - **Printers Service API:** [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Monitoring Service API:** [http://localhost:8002/docs](http://localhost:8002/docs)
 - **Calibration Service API:** [http://localhost:8001/docs](http://localhost:8001/docs)
+
+### Documentación Mejorada
+
+Todos los servicios incluyen:
+- ✅ Descripciones detalladas de funcionalidades
+- ✅ Ejemplos de uso con datos reales
+- ✅ Tags organizados por categorías
+- ✅ Información de contacto del equipo
+- ✅ Documentación de integración entre servicios
 
 ## Development
 
@@ -214,6 +337,34 @@ docker-compose up -d --build
 
 See the `kubernetes/` directory for deployment manifests.
 
+## Evaluación y Documentación
+
+### Documentos de Evaluación
+
+- **[EVALUACION_MICROSERVICIOS.md](EVALUACION_MICROSERVICIOS.md)**: Evaluación completa del sistema
+- **[PLAN_PRUEBAS.md](PLAN_PRUEBAS.md)**: Plan detallado de pruebas de funcionamiento
+
+### Estado del Sistema
+
+- ✅ **Microservicios**: Funcionando correctamente
+- ✅ **Docker Compose**: Configurado para desarrollo local
+- ✅ **Terraform**: Infraestructura como código implementada
+- ✅ **Documentación Swagger**: Completa y detallada
+- ✅ **Pruebas Automatizadas**: Suite comprehensiva implementada
+
+### Comandos de Evaluación
+
+```bash
+# Ver todos los comandos disponibles
+make help
+
+# Evaluación completa del sistema
+make deploy-test-docker
+
+# Solo ejecutar pruebas
+make test-only
+```
+
 ## License
 
 MIT License
@@ -225,3 +376,10 @@ MIT License
 3. Commit your changes
 4. Push to the branch
 5. Create a new Pull Request
+
+### Guías de Contribución
+
+- Ejecuta las pruebas antes de hacer commit: `make test-comprehensive`
+- Actualiza la documentación si es necesario
+- Sigue las convenciones de código establecidas
+- Verifica que la integración entre servicios funcione
